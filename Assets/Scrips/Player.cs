@@ -1,25 +1,27 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    [SerializeField] RuntimeAnimatorController[] runtimeAnimatorController;
-    [SerializeField] ChangeWeapon changeWeapon;
-    [SerializeField] TpsCamera refCamera;
+    [SerializeField] RuntimeAnimatorController[] runtimeAnimatorController = null;
+    [SerializeField] ChangeWeapon changeWeapon = null;
+    [SerializeField] TpsCamera refCamera = null;
+    [SerializeField] GameObject[] hitPointArray = null;
+    [SerializeField] AudioClip attack = null;
+    [SerializeField] AudioClip damage = null;
     [SerializeField] float soarTime = 0f;
-    [SerializeField] GameObject[] hitPointArray;
-    [SerializeField] AudioClip attack;
-    [SerializeField] AudioClip damage;
     CharacterController characterController;
-    Animator animator;
-    AudioSource audioSource;
-    Vector3 velocity;
+    Animator animator = null;
+    AudioSource audioSource = null;
+    Vector3 velocity = Vector3.zero;
     int runSpeed = 4;
     int walkSpeed = 2;
     int keyPush = 0;
     int moveParamHash = Animator.StringToHash("Move");
-    int attackParamHash = Animator.StringToHash("Attack");
+    int attackParamHash = Animator.StringToHash("attack");
+    int AttackParamHash = Animator.StringToHash("Attack");
     int motionParamHash = Animator.StringToHash("MotionSpeed");
     int runRecovary;
     int hitPoint = 3;
@@ -28,10 +30,10 @@ public class Player : MonoBehaviour
     float tiredTime = 5.0f;
     float gravity = 10.0f;
     float runRecovaryTime = 8.0f;
-    float runRecovaryTimer;
-    float attackRecovary;
+    float runRecovaryTimer = 0.0f;
+    float attackRecovary = 0.0f;
     float attackRecovaryTime = 5.0f;
-    float attackRecovaryTimer;
+    float attackRecovaryTimer = 0.0f;
     bool isActive = true;
 
     public bool IsActive
@@ -49,10 +51,22 @@ public class Player : MonoBehaviour
         Idle,
         Walk,
         Run,
+        Attack,
     }
 
+    enum PlayerState
+    {
+        Idle,
+        Transfer,
+        Attack,
+        ReceiveDamage,
+        Die,
+    }
+
+    PlayerState playerState = PlayerState.Idle;
+
     void Start()
-    {    
+    {
         animator = GetComponent<Animator>();
         characterController = GetComponent<CharacterController>();
         audioSource = GetComponent<AudioSource>();
@@ -62,7 +76,9 @@ public class Player : MonoBehaviour
 
     void Update()
     {
-        if(isActive)
+        velocity = Vector3.zero;
+
+        if (isActive)
         {
             Controller();
         }       
@@ -77,19 +93,36 @@ public class Player : MonoBehaviour
 
     void Controller()
     {
-        velocity = Vector3.zero;
+        if (!Input.anyKey)
+        {
+            playerState = PlayerState.Idle;
+        }
 
-        if (Input.GetKey(KeyCode.LeftShift) && 
-            !animator.GetCurrentAnimatorStateInfo(0).IsTag("Attack"))
+        switch (playerState)
         {
-            Transfer(runSpeed, (int)PlayerAnimation.Run);
-            Tired();
+            case PlayerState.Idle:
+                Idle();
+                Recovary();
+                break;
+            case PlayerState.Transfer:
+                if (Input.GetKey(KeyCode.LeftShift))
+                {
+                    Transfer(runSpeed, (int)PlayerAnimation.Run);
+                    Tired();
+                    break;
+                }
+                Transfer(walkSpeed, (int)PlayerAnimation.Walk);
+                Recovary();
+                break;
+            case PlayerState.Attack:
+                Attack();
+                break;
+            case PlayerState.ReceiveDamage:
+                break;
+            case PlayerState.Die:
+                break;
         }
-        else if(!animator.GetCurrentAnimatorStateInfo(0).IsTag("Attack"))
-        {
-            Transfer(walkSpeed, (int)PlayerAnimation.Walk);
-        }
-        
+
         if (velocity.magnitude > 0)
         {
             transform.rotation = Quaternion.Slerp(
@@ -97,14 +130,22 @@ public class Player : MonoBehaviour
                 Quaternion.LookRotation(refCamera.HorizontalRotation * velocity),
                 apply);
         }
+    }
 
-        Attack();
-
-        if (animator.GetCurrentAnimatorStateInfo(0).IsName("Idle") ||
-            animator.GetCurrentAnimatorStateInfo(0).IsName("Walk"))
+    void Idle()
+    {
+        if (Input.GetMouseButtonDown(0))
         {
-            Recovary();
+            playerState = PlayerState.Attack;
+            return;
         }
+        else if (Input.anyKey)
+        {
+            playerState = PlayerState.Transfer;
+            return;
+        }
+        
+        animator.SetInteger(moveParamHash, (int)PlayerAnimation.Idle);
     }
 
     void Transfer(int speed, int animationParam)
@@ -131,7 +172,11 @@ public class Player : MonoBehaviour
             animator.SetInteger(moveParamHash, animationParam);
         }
 
-        if (!Input.anyKey)
+        if(Input.GetMouseButton(0))
+        {
+            playerState = PlayerState.Attack;
+        }
+        else if(!Input.anyKey)
         {
             animator.SetInteger(moveParamHash, (int)PlayerAnimation.Idle);
         }
@@ -141,12 +186,8 @@ public class Player : MonoBehaviour
 
     void Attack()
     {
-        if (Input.GetMouseButtonDown(0))
-        {
-            keyPush++;
-            Tired();
-            animator.SetTrigger(attackParamHash);
-        }
+        Tired();
+        animator.SetTrigger(AttackParamHash);
     }
 
     void Tired()
@@ -177,7 +218,6 @@ public class Player : MonoBehaviour
 
                 keyPush = 0;
             }
-            
         }
 
         animator.SetFloat(motionParamHash, motionSpeed);
@@ -212,10 +252,10 @@ public class Player : MonoBehaviour
 
     void OnTriggerEnter(Collider col)
     {
-        if(col.gameObject.name == "kopie")
+        if(col.gameObject.tag == "EnemyWeapon")
         {
             HitPoint();
-            if(hitPoint <= 0)
+            if (hitPoint <= 0)
             {
                 isActive = false;
                 animator.SetBool("Die", true);
@@ -225,12 +265,15 @@ public class Player : MonoBehaviour
 
     void HitPoint()
     {
-        hitPointArray[hitPoint - 1].SetActive(false);
-        hitPoint--;
-        audioSource.PlayOneShot(damage);
+        if(hitPointArray != null)
+        {
+            hitPointArray[hitPoint - 1].SetActive(false);
+            hitPoint--;
+            audioSource.PlayOneShot(damage);
+        }   
     }
 
-    void AttackSound()
+    void AttackVoiceSound()
     {
         audioSource.PlayOneShot(attack);
     }
