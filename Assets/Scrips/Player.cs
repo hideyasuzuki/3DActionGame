@@ -20,8 +20,7 @@ public class Player : MonoBehaviour
     int walkSpeed = 2;
     int keyPush = 0;
     int moveParamHash = Animator.StringToHash("Move");
-    int attackParamHash = Animator.StringToHash("attack");
-    int AttackParamHash = Animator.StringToHash("Attack");
+    int attackParamHash = Animator.StringToHash("Attack");
     int motionParamHash = Animator.StringToHash("MotionSpeed");
     int runRecovary;
     int hitPoint = 3;
@@ -35,6 +34,7 @@ public class Player : MonoBehaviour
     float attackRecovaryTime = 5.0f;
     float attackRecovaryTimer = 0.0f;
     bool isActive = true;
+    bool isAttack = false;
 
     public bool IsActive
     {
@@ -44,6 +44,11 @@ public class Player : MonoBehaviour
     public Animator Animator
     {
         get { return animator; }
+    }
+
+    public int AttackParamHash
+    {
+        get { return attackParamHash; }
     }
 
     enum PlayerAnimation
@@ -103,6 +108,7 @@ public class Player : MonoBehaviour
             case PlayerState.Idle:
                 Idle();
                 Recovary();
+                //Debug.Log(playerState);
                 break;
             case PlayerState.Transfer:
                 if (Input.GetKey(KeyCode.LeftShift))
@@ -113,9 +119,11 @@ public class Player : MonoBehaviour
                 }
                 Transfer(walkSpeed, (int)PlayerAnimation.Walk);
                 Recovary();
+                //Debug.Log(playerState);
                 break;
             case PlayerState.Attack:
                 Attack();
+                //Debug.Log(playerState);
                 break;
             case PlayerState.ReceiveDamage:
                 break;
@@ -137,19 +145,30 @@ public class Player : MonoBehaviour
         if (Input.GetMouseButtonDown(0))
         {
             playerState = PlayerState.Attack;
+            isAttack = true;
             return;
         }
-        else if (Input.anyKey)
+        else if(!Input.GetMouseButton(0) && Input.anyKey)
         {
             playerState = PlayerState.Transfer;
-            return;
         }
-        
+
         animator.SetInteger(moveParamHash, (int)PlayerAnimation.Idle);
     }
 
     void Transfer(int speed, int animationParam)
     {
+
+        if (Input.GetMouseButtonDown(0))
+        {
+            playerState = PlayerState.Attack;
+            return;
+        }
+        else if (!Input.anyKey)
+        {
+            animator.SetInteger(moveParamHash, (int)PlayerAnimation.Idle);
+        }
+
         if (Input.GetKey(KeyCode.W))
         {
             velocity.z += speed;
@@ -172,24 +191,16 @@ public class Player : MonoBehaviour
             animator.SetInteger(moveParamHash, animationParam);
         }
 
-        if(Input.GetMouseButton(0))
-        {
-            playerState = PlayerState.Attack;
-        }
-        else if(!Input.anyKey)
-        {
-            animator.SetInteger(moveParamHash, (int)PlayerAnimation.Idle);
-        }
-
         velocity = velocity.normalized * speed * Time.deltaTime;
     }
 
     void Attack()
     {
         Tired();
-        animator.SetTrigger(AttackParamHash);
+        animator.SetTrigger(attackParamHash);
+        playerState = PlayerState.Idle;
     }
-
+    
     void Tired()
     {
         if (animator.GetCurrentAnimatorStateInfo(0).IsName("Run"))
@@ -201,7 +212,7 @@ public class Player : MonoBehaviour
                 {
                     return;
                 }
-
+                
                 runSpeed--;
                 soarTime = 0;
             }
