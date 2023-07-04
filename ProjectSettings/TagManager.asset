@@ -7,6 +7,8 @@ TagManager:
   - enemyBug
   - Castle
   - Weapon
+  - EnemyWeapon
+  - Enemy
   layers:
   - Default
   - TransparentFX
@@ -14,8 +16,8 @@ TagManager:
   - Goblin
   - Water
   - UI
+  - obstacle
   - Obstacle
-  - 
   - 
   - 
   - 

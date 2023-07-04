@@ -10,8 +10,7 @@ public class GameOver : MonoBehaviour
 {
     [SerializeField] TMP_Text text;
     [SerializeField] Player player;
-    float sceneTime = 2;
-    float timer;
+    float sceneChangeTime = 2;
     // Start is called before the first frame update
     void Start()
     {
@@ -24,12 +23,14 @@ public class GameOver : MonoBehaviour
         if (!player.IsActive)
         {
             text.enabled = true;
-            timer += Time.deltaTime;
-            if(timer > sceneTime)
-            {
-                Cursor.visible = true;
-                SceneManager.LoadScene("TitleScene"); 
-            }            
+            StartCoroutine(ChangeScene());
         }
+    }
+
+    IEnumerator ChangeScene()
+    {
+        yield return new WaitForSeconds(sceneChangeTime);
+        Cursor.visible = true;
+        SceneManager.LoadScene("TitleScene");
     }
 }

@@ -26,32 +26,30 @@ public class Chest : MonoBehaviour
 
     void OnTriggerStay(Collider col)
     {
-        if (col.gameObject.name == "Set Costume_02 SD Unity-Chan WGS")
+        if (col.gameObject.tag == "Player")
         {
             text.enabled = true;
-            if (animator.GetCurrentAnimatorStateInfo(0).IsName("Open"))
+            if(Input.GetKeyDown(KeyCode.F)) 
             {
-                if (Input.GetKey(KeyCode.F))
+                if(animator.GetCurrentAnimatorStateInfo(0).IsName("Open"))
                 {
                     text.enabled = false;
                     Destroy(gameObject);
                 }
+                else
+                {
+                    text.text = "武器を変更（F）";
+                    animator.SetBool("Push Key", true);
+                    TwinDaggerLeft.SetActive(true);
+                    TwinDaggerRight.SetActive(true);
+                }
             }
-
-            if(Input.GetKeyDown(KeyCode.F))
-            {
-                text.text = "武器を変更（F）";
-                animator.SetBool("Push Key", true);
-                TwinDaggerLeft.SetActive(true);
-                TwinDaggerRight.SetActive(true);
-            }
-            
         }
     }
 
     void OnTriggerExit(Collider col)
     {
-        if (col.gameObject.name == "Set Costume_02 SD Unity-Chan WGS")
+        if (col.gameObject.tag == "Player")
         {
             text.enabled = false;
         }

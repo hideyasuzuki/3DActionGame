@@ -4,10 +4,10 @@ using UnityEngine;
 
 public class ChangeWeapon : MonoBehaviour
 {
-    [SerializeField] GameObject TwinDaggerLeft;
-    [SerializeField] GameObject TwinDaggerRight;
-    [SerializeField] GameObject GreatSword;
-    GameObject Chest;
+    [SerializeField] GameObject twinDaggerLeft;
+    [SerializeField] GameObject twinDaggerRight;
+    [SerializeField] GameObject greatSword;
+    GameObject chest;
     bool isChange = false;
     public bool IsChange
     {
@@ -16,7 +16,7 @@ public class ChangeWeapon : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        Chest = GameObject.Find("Wooden_Chest");
+        chest = GameObject.Find("Wooden_Chest");
     }
 
     // Update is called once per frame
@@ -24,11 +24,11 @@ public class ChangeWeapon : MonoBehaviour
     {
         if(isChange == false)
         {
-            if (Chest == null)
+            if (chest == null)
             {
-                TwinDaggerLeft.SetActive(true);
-                TwinDaggerRight.SetActive(true);
-                GreatSword.SetActive(false);
+                twinDaggerLeft.SetActive(true);
+                twinDaggerRight.SetActive(true);
+                greatSword.SetActive(false);
                 isChange = true;
             }
         }     

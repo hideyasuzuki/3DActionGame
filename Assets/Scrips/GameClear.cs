@@ -7,8 +7,7 @@ using UnityEngine.SceneManagement;
 public class GameClear : MonoBehaviour
 {
     [SerializeField] TMP_Text text;
-    float sceneTime = 2;
-    float timer;
+    float sceneChangeTime = 2;
     // Start is called before the first frame update
     void Start()
     {
@@ -20,12 +19,7 @@ public class GameClear : MonoBehaviour
     {
         if (text.enabled)
         {
-            timer += Time.deltaTime;
-            if (timer > sceneTime)
-            {
-                Cursor.visible = true;
-                SceneManager.LoadScene("TitleScene");
-            }
+            StartCoroutine(ChangeScene());
         }
     }
 
@@ -35,5 +29,12 @@ public class GameClear : MonoBehaviour
         {
             text.enabled = true;
         }
+    }
+
+    IEnumerator ChangeScene()
+    {
+        yield return new WaitForSeconds(sceneChangeTime);
+        Cursor.visible = true;
+        SceneManager.LoadScene("TitleScene");
     }
 }

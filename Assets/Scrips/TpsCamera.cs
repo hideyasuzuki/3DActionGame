@@ -4,18 +4,70 @@ using UnityEngine;
 
 public class TpsCamera : MonoBehaviour
 {
+    /// <summary>
+    /// 注視対象プレイヤー
+    /// </summary>
     [SerializeField] GameObject target;
-    [SerializeField] Transform player;          // 注視対象プレイヤー
-    [SerializeField] float distance = 3.0f;    // 注視対象プレイヤーからカメラを離す距離
-    Quaternion verticalRotation;      // カメラの垂直回転(見下ろし回転)
-    Quaternion horizontalRotation;      // カメラの水平回転
+    /// <summary>
+    /// 注視対象プレイヤーからカメラを離す距離
+    /// </summary>
+    [SerializeField] float distance = 3.0f;
+    /// <summary>
+    /// カメラの垂直回転(見下ろし回転)
+    /// </summary>
+    Quaternion verticalRotation;
+    /// <summary>
+    /// カメラの水平回転
+    /// </summary>
+    Quaternion horizontalRotation;
+    /// <summary>
+    /// レイヤー名
+    /// </summary>
+    [SerializeField] LayerMask obstacle;
+    /// <summary>
+    /// マウスのx軸
+    /// </summary>
     float mouseX;
+    /// <summary>
+    /// マウスのy軸
+    /// </summary>
     float mouseY;
+    /// <summary>
+    /// マウスの感度
+    /// </summary>
     float turnSpeed = 1.0f;
+    /// <summary>
+    /// 最小値
+    /// </summary>
     float minX = 10;
+    /// <summary>
+    /// 最大値
+    /// </summary>
     float maxX = 80;
+    /// <summary>
+    /// 現在のy軸の角度
+    /// </summary>
     float currentY;
+    /// <summary>
+    /// 現在のx軸の角度
+    /// </summary>
     float currentX;
+    /// <summary>
+    /// 鋭角
+    /// </summary>
+    float acuteAngle = -90.0f;
+    /// <summary>
+    /// 鈍角
+    /// </summary>
+    float obtuseAngle = 90.0f;
+    /// <summary>
+    /// 半円の角度
+    /// </summary>
+    float semicircleAngle = 180.0f;
+    /// <summary>
+    /// 円の角度
+    /// </summary>
+    float circleAngle = 360.0f;
 
     public Quaternion HorizontalRotation
     {
@@ -25,13 +77,18 @@ public class TpsCamera : MonoBehaviour
     void Start()
     {
         //回転の初期化
-        verticalRotation = Quaternion.Euler(35, 0, 0);         // 垂直回転(X軸を軸とする回転)は、35度見下ろす回転
-        horizontalRotation = Quaternion.identity;                // 水平回転(Y軸を軸とする回転)は、無回転
-        transform.rotation = horizontalRotation * verticalRotation;     // 最終的なカメラの回転は、垂直回転してから水平回転する合成回転
+        // 垂直回転は、35度見下ろす回転
+        verticalRotation = Quaternion.Euler(35, 0, 0);
+
+        // 水平回転は、無回転
+        horizontalRotation = Quaternion.identity;
+
+        // 最終的なカメラの回転
+        transform.rotation = horizontalRotation * verticalRotation;     
 
         //位置の初期化
-        //player位置から距離distanceだけ手前に引いた位置を設定します
-        transform.position = player.position - transform.rotation * Vector3.forward * distance;
+        //player位置から距離distanceだけ手前に引いた位置
+        transform.position = target.transform.position - transform.rotation * Vector3.forward * distance;
     }
 
     void Update()
@@ -39,26 +96,27 @@ public class TpsCamera : MonoBehaviour
         mouseX = Input.GetAxis("Mouse X");
         mouseY = Input.GetAxis("Mouse Y");
         currentY = transform.localEulerAngles.y;
-        if(currentY > 180)
+        
+        if (currentY > semicircleAngle)
         {
-            currentY = currentY - 360;
+            currentY = currentY - circleAngle;
         }
-        if (Mathf.Abs(mouseX) > 0.1)
+
+        if (Mathf.Abs(mouseX) > 0.1f)
         {
-            transform.RotateAround(target.transform.position, Vector3.up, mouseX);
             horizontalRotation *= Quaternion.Euler(0, mouseX * turnSpeed, 0);
         }
 
-        if (Mathf.Abs(mouseY) > 0.1)
+        if (Mathf.Abs(mouseY) > 0.1f)
         {
-            if(currentY <= -90 || currentY > 90)
+            if(currentY <= acuteAngle || currentY > obtuseAngle)
             {
                 transform.RotateAround(target.transform.position, Vector3.left, mouseY);
             }
-            else if(currentY >= -90 || currentY < 90)
+            else if(currentY >= acuteAngle || currentY < obtuseAngle)
             {
                 transform.RotateAround(target.transform.position, Vector3.right, mouseY);
-            }        
+            }
         }
 
         currentX = transform.localEulerAngles.x;
@@ -71,6 +129,14 @@ public class TpsCamera : MonoBehaviour
         // カメラの位置(transform.position)の更新
         transform.rotation = horizontalRotation * verticalRotation;
         // player位置から距離distanceだけ手前に引いた位置を設定します
-        transform.position = player.position - transform.rotation * Vector3.forward * distance;
+        transform.position = target.transform.position - transform.rotation * Vector3.forward * distance;
+
+        RaycastHit hit;
+        //レイが障害物を検知したらカメラの位置を障害物の手前にする
+        if (Physics.Linecast(target.transform.position, transform.position, out hit, obstacle))
+        {
+            transform.position = hit.point;
+            Debug.DrawLine(target.transform.position, transform.position, Color.red, 0f, false);
+        }
     }
 }
