@@ -8,7 +8,8 @@ public class Player : MonoBehaviour
 {
     [SerializeField] RuntimeAnimatorController[] runtimeAnimatorController = null;
     [SerializeField] ChangeWeapon changeWeapon = null;
-    [SerializeField] TpsCamera refCamera = null;
+    [SerializeField] TpsCamera refCamera = null; 
+    [SerializeField] GameClear gameClear = null;
     [SerializeField] GameObject[] hitPointArray = null;
     [SerializeField] AudioClip attackSound = null;
     [SerializeField] AudioClip damageSound = null;
@@ -45,7 +46,7 @@ public class Player : MonoBehaviour
     int accumulateFatigue = 0;
     int hitPoint = 3;
     float strengthRecoveryTimer = 0.0f;
-    float attackRecoveryTimer = 0.0f;
+    [SerializeField]float attackRecoveryTimer = 0.0f;
     float accumulationTimer = 0f;
     /// <summary>
     /// 振り向きの速さ
@@ -60,11 +61,11 @@ public class Player : MonoBehaviour
     /// Playerのアクティブ状態の変更
     /// </summary>
     bool isActive = true;
-
     public bool IsActive
     {
         get { return isActive; }
     }
+
     
     /// <summary>
     /// Playerのアニメーションid
@@ -86,8 +87,6 @@ public class Player : MonoBehaviour
         Walk,
         Run,
         Attack,
-        ReceiveDamage,
-        Die,
     }
 
     PlayerState playerState = PlayerState.Idle;
@@ -102,6 +101,13 @@ public class Player : MonoBehaviour
     {
         //前フレームの速度の値が入っているため値を初期化する
         velocity = Vector3.zero;
+
+        if (gameClear.IsClear)
+        {
+            animator.SetInteger(moveParamHash, (int)PlayerAnimation.Idle);
+            return;
+        }
+
         //武器が変更されたらアニメーションを変更する
         if (changeWeapon.IsChange && animator.runtimeAnimatorController != runtimeAnimatorController[0])
         {
@@ -109,14 +115,14 @@ public class Player : MonoBehaviour
             animator.SetFloat(motionParamHash, motionSpeed);
         }
 
-        //非アクティブの時Playerが動かないようにする
+        ////非アクティブの時Playerが動かないようにする
         if (isActive)
         {
             Controller();
         }
 
         float gravity = 10.0f;
-        //velocity.y -= gravity * Time.deltaTime;
+        velocity.y -= gravity * Time.deltaTime;
         //カメラの向きに移動させる
         characterController.Move(refCamera.HorizontalRotation * velocity);
     }
@@ -128,7 +134,6 @@ public class Player : MonoBehaviour
         {
             case PlayerState.Idle:
                 Idle();
-                Debug.Log(playerState);
                 Recovery();
                 break;
             case PlayerState.Walk:
@@ -140,12 +145,7 @@ public class Player : MonoBehaviour
                 Tired();
                 break;
             case PlayerState.Attack:
-                Debug.Log(playerState);
                 Attack();
-                break;
-            case PlayerState.ReceiveDamage:
-                break;
-            case PlayerState.Die:
                 break;
         }
 
@@ -242,9 +242,9 @@ public class Player : MonoBehaviour
             accumulateFatigue++;
             if (motionSpeed < 0.6)
             {
-                //return;
+                return;
             }
-            else if (accumulateFatigue > 3)
+            else if (accumulateFatigue > 2)
             {
                 motionSpeed -= 0.2f;
                 accumulateFatigue = 0;
@@ -260,8 +260,8 @@ public class Player : MonoBehaviour
     {
         int strengthRecovery = 4;
         const float strengthRecoveryTime = 8.0f;
-        const float attackRecoveryTime = 5.0f;
-        float attackRecovery = 1.0f;
+        const float attackRecoveryTime = 7.0f;
+        float attackRecovery = 0.8f;
         
 
         //低下したぶんだけ体力回復させる   

@@ -96,7 +96,12 @@ public class Enemy : MonoBehaviour
     {
         distance = Vector3.Distance(player.transform.position, transform.position);
 
-        if (distance < trackingRange)
+
+        if (player.transform.position.y > 2)
+        {
+            return false;
+        }
+        else if (distance < trackingRange)
         {
             return true;
         }
