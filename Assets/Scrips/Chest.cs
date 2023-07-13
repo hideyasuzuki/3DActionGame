@@ -29,7 +29,7 @@ public class Chest : MonoBehaviour
         if (col.gameObject.tag == "Player")
         {
             text.enabled = true;
-            if(Input.GetKeyDown(KeyCode.F)) 
+            if(Input.GetKey(KeyCode.F)) 
             {
                 if(animator.GetCurrentAnimatorStateInfo(0).IsName("Open"))
                 {
