@@ -297,7 +297,7 @@ public class Player : MonoBehaviour
     {
         if(col.gameObject.tag == "EnemyWeapon")
         {
-            //TakeDamage();
+            TakeDamage();
             if (hitPoint <= 0)
             {
                 isActive = false;
