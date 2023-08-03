@@ -1,3 +1,4 @@
+using DG.Tweening;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -46,7 +47,7 @@ public class Player : MonoBehaviour
     int accumulateFatigue = 0;
     int hitPoint = 3;
     float strengthRecoveryTimer = 0.0f;
-    [SerializeField]float attackRecoveryTimer = 0.0f;
+    float attackRecoveryTimer = 0.0f;
     float accumulationTimer = 0f;
     /// <summary>
     /// 振り向きの速さ
@@ -56,7 +57,6 @@ public class Player : MonoBehaviour
     /// アニメーション再生の速さ
     /// </summary>
     float motionSpeed = 1.0f;
-    float hitStopTime = 0.1f;
     /// <summary>
     /// Playerのアクティブ状態の変更
     /// </summary>
@@ -134,18 +134,22 @@ public class Player : MonoBehaviour
         {
             case PlayerState.Idle:
                 Idle();
+                //Debug.Log(playerState);
                 Recovery();
                 break;
             case PlayerState.Walk:
                 Transfer(walkSpeed, (int)PlayerAnimation.Walk);
+                //Debug.Log(playerState);
                 Recovery();
                 break;
             case PlayerState.Run:
                 Transfer(runSpeed, (int)PlayerAnimation.Run);
+                //Debug.Log(playerState);
                 Tired();
                 break;
             case PlayerState.Attack:
                 Attack();
+                //Debug.Log(playerState);
                 break;
         }
 
@@ -293,21 +297,13 @@ public class Player : MonoBehaviour
     {
         if(col.gameObject.tag == "EnemyWeapon")
         {
-            TakeDamage();
-            StartCoroutine(HitStop());
+            //TakeDamage();
             if (hitPoint <= 0)
             {
                 isActive = false;
                 animator.SetBool("Die", true);
             }
         }
-    }
-
-    IEnumerator HitStop()
-    {
-        animator.speed = 0f;
-        yield return new WaitForSeconds(hitStopTime);
-        animator.speed = 1f;
     }
 
     /// <summary>
@@ -324,6 +320,9 @@ public class Player : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 攻撃音声を再生する
+    /// </summary>
     void AttackVoiceSound()
     {
         audioSource.PlayOneShot(attackSound);

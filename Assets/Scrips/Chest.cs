@@ -9,13 +9,14 @@ public class Chest : MonoBehaviour
     [SerializeField] TMP_Text text;
     [SerializeField] GameObject TwinDaggerLeft;
     [SerializeField] GameObject TwinDaggerRight;
-    Animator animator;
+    [SerializeField] GameObject chest;
+    Animator chestAnimator;
 
     // Start is called before the first frame update
     void Start()
     {
-        animator = GetComponent<Animator>();
         text.enabled = false;
+        chestAnimator = chest.GetComponent<Animator>();
     }
 
     // Update is called once per frame
@@ -29,17 +30,17 @@ public class Chest : MonoBehaviour
         if (col.gameObject.tag == "Player")
         {
             text.enabled = true;
-            if(Input.GetKey(KeyCode.F)) 
+            if(Input.GetKeyDown(KeyCode.F)) 
             {
-                if(animator.GetCurrentAnimatorStateInfo(0).IsName("Open"))
+                if(chestAnimator.GetCurrentAnimatorStateInfo(0).IsName("Open"))
                 {
                     text.enabled = false;
-                    Destroy(gameObject);
+                    Destroy(chest);
                 }
                 else
                 {
                     text.text = "ïêäÌÇïœçXÅiFÅj";
-                    animator.SetBool("Push Key", true);
+                    chestAnimator.SetBool("IsKeyPush", true);
                     TwinDaggerLeft.SetActive(true);
                     TwinDaggerRight.SetActive(true);
                 }

@@ -20,11 +20,9 @@ public class EnemyChaseState : EnemyStateBase
     {
         EnemyStateBase.Action action = null;
         EnemyStateBase.ActionArg arg;
-        float distance = Vector3.Distance(enemy.Target.transform.position, enemy.transform.position);
-        float attackRange = 0.9f;
         
         //UŒ‚‚Æõ“G‚Ì”ÍˆÍ‚Ì”»’è‚ğ‚µ‚Ä‚©‚çChase‚Ìˆ—‚ğÀs‚·‚é
-        if(AttackRange(distance, attackRange))
+        if(enemy.AttackRange())
         {
             return new EnemyAttackState();
         }     
@@ -46,20 +44,5 @@ public class EnemyChaseState : EnemyStateBase
         }
 
         return new EnemyChaseState();
-    }
-
-    /// <summary>
-    /// UŒ‚”ÍˆÍ‚Ì”»’è‚ğs‚¤
-    /// </summary>
-    /// <param name="distance"></param>
-    /// <param name="range"></param>
-    /// <returns></returns>
-    bool AttackRange(float distance, float range)
-    {
-        if (distance < range)
-        {
-            return true;
-        }
-        return false;
     }
 }

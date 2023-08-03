@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using DG.Tweening;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -138,5 +139,22 @@ public class TpsCamera : MonoBehaviour
             transform.position = hit.point;
             Debug.DrawLine(target.transform.position, transform.position, Color.red, 0f, false);
         }
+    }
+
+    public void Shake(float width, int count, float duration)
+    {
+       
+        Sequence sequence = DOTween.Sequence();
+        float partDuration = duration / count / 2f;
+        float widthHalf = width / 2f;
+
+        for(int i = 0; i < count - 1; i++)
+        {
+            sequence.Append(transform.DOLocalRotate(new Vector3(-widthHalf, 0f), partDuration));
+            sequence.Append(transform.DOLocalRotate(new Vector3(widthHalf, 0f), partDuration));
+        }
+
+        sequence.Append(transform.DOLocalRotate(new Vector3(-widthHalf, 0f), partDuration));
+        sequence.Append(transform.DOLocalRotate(Vector3.zero, partDuration));
     }
 }

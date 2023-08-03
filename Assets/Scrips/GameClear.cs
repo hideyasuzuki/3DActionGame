@@ -42,6 +42,6 @@ public class GameClear : MonoBehaviour
     {
         yield return new WaitForSeconds(sceneChangeTime);
         Cursor.visible = true;
-        SceneManager.LoadScene("TitleScene");
+        SceneManager.LoadScene("DesertScene");
     }
 }

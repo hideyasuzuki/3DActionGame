@@ -1,5 +1,7 @@
+using DG.Tweening;
 using System.Collections;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using System.Threading;
 using UnityEngine;
 using UnityEngine.AI;
@@ -8,6 +10,8 @@ public class Enemy : MonoBehaviour
 {
     [SerializeField] AudioClip attack;
     [SerializeField] AudioClip damage;
+    GameObject tpsCamera = null;
+    TpsCamera refCamera = null;
     NavMeshAgent agent;
     GameObject player = null;
     Animator animator;
@@ -15,16 +19,19 @@ public class Enemy : MonoBehaviour
     Dictionary<string, EnemyStateBase.Action> actions = null;
     EnemyStateBase currentState = null;
     int hitPoint = 4;
+    int count = 1;
     /// <summary>
     ///　TargetとEnemyまでの距離
     /// </summary>
-    float distance;
+    float distance = 0;
+    [SerializeField] float range = 0.9f;
     /// <summary>
     /// 索敵範囲
     /// </summary>
-    float trackingRange = 4f;
-
-    float hitStopTime = 0.1f;
+    [SerializeField] float trackingRange = 4f;
+    float hitStopTime = 0.5f;
+    float width = 1;
+    float duration = 1;
 
     public Animator Animator
     {
@@ -49,7 +56,8 @@ public class Enemy : MonoBehaviour
         animator = GetComponent<Animator>();
         audioSource = GetComponent<AudioSource>();
         player = GameObject.Find("Player");
-
+        tpsCamera = GameObject.Find("Camera");
+        refCamera = tpsCamera.GetComponent<TpsCamera>();
         actions = new Dictionary<string, EnemyStateBase.Action>();
         actions["Move"] = Move;
         currentState = new EnemyWaitState();
@@ -65,17 +73,15 @@ public class Enemy : MonoBehaviour
     {
         if (col.gameObject.tag == "Weapon")
         {
-            hitPoint--;
-            StartCoroutine(HitStop());
+            //hitPoint--;
             audioSource.PlayOneShot(damage);
-            if(hitPoint > 0)
-            {
-                animator.SetBool("Damage", true);
-            }
-            else
+            if(hitPoint <= 0)
             {
                 animator.SetBool("Death", true);
+                return;
             }
+            Damage(player.transform.forward);
+            refCamera.Shake(width, count, duration);
         }
     }
 
@@ -96,12 +102,27 @@ public class Enemy : MonoBehaviour
     {
         distance = Vector3.Distance(player.transform.position, transform.position);
 
-
         if (player.transform.position.y > 2)
         {
             return false;
         }
         else if (distance < trackingRange)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// 攻撃範囲の判定を行う
+    /// </summary>
+    /// <param name="distance"></param>
+    /// <param name="range"></param>
+    /// <returns></returns>
+    public bool AttackRange()
+    {
+        distance = Vector3.Distance(player.transform.position, transform.position);
+        if (distance < range)
         {
             return true;
         }
@@ -124,11 +145,16 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    IEnumerator HitStop()
+    private void Damage(Vector3 forward)
     {
-        animator.speed = 0;
-        yield return new WaitForSeconds(hitStopTime);
-        animator.speed = 1;
+        Sequence seq = DOTween.Sequence();
+        seq.SetDelay(hitStopTime);
+                                           // 遅延を待った後、吹っ飛ぶ演出を再生
+        Vector3 backPosition = transform.position + forward.normalized * 1f;
+        seq.Append(transform.DOMove(backPosition, 0.2f));
+
+        // ダメージモーション再生
+        animator.CrossFade("Damage", 0.2f);
     }
 
     /// <summary>
